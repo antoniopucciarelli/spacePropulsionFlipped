@@ -58,7 +58,6 @@ web = 3e-2;
 outDiam     = 160e-3;
 innerDiam   = 100e-3;
 len         = 290e-3;
-dimensions  = [outDiam, innerDiam, throatDiam, len];
 % setting up cStar
 cStar       = 1560;
 % setting up time interval for the study
@@ -75,20 +74,82 @@ rhop        = 1 / (percNH4ClO4/rhoNH4ClO4 + percAl/rhoAl + percHTPB/rhoHTPB);
 % simulating baria motor low pressure nozzle 
 throatDiam  = 28.8e-3;
 dimensions  = [outDiam, innerDiam, throatDiam, len];
-[time, pVec, x, y, RbVec] = baria(a, n, cStar, rhop, deltaT, dimensions, true);
+%[time, pVec, x, y, RbVec] = baria(a, n, cStar, rhop, deltaT, dimensions, true);
 % simulating baria motor mid pressure nozzle 
 throatDiam  = 25.25e-3;
 dimensions  = [outDiam, innerDiam, throatDiam, len];
-[time, pVec, x, y, RbVec] = baria(a, n, cStar, rhop, deltaT, dimensions, true);
+%[time, pVec, x, y, RbVec] = baria(a, n, cStar, rhop, deltaT, dimensions, true);
 % simulating baria motor high pressure nozzle
 throatDiam  = 21.81e-3;
 dimensions  = [outDiam, innerDiam, throatDiam, len]; 
-[time, pVec, x, y, RbVec] = baria(a, n, cStar, rhop, deltaT, dimensions, true);
+%[time, pVec, x, y, RbVec] = baria(a, n, cStar, rhop, deltaT, dimensions, true);
 
 %% monte carlo simulation 
-rng('default');
-deviation = [];
-mean      = [];
+pkg load statistics;
 
+% setting up storing values
+deviationVec = [];
+meanVec      = [];
+tVec         = [];
 
+% setting up errors
+meanError = 1; 
+deviationError = 1;
+meanTol = 1e-3;
+deviationTol = 1e-3;
 
+nMax = 500;
+counter = 0;
+errors = true;
+
+while errors && counter < nMax
+    
+    counter = counter + 1;
+
+    % computing new values for the Monte Carlo simulation 
+    aMC = random('normal distribution', a, Inc_a);
+    nMC = random('normal distribution', n, Inc_n);
+    
+    % baria simulation 
+    [time, ~, ~, ~, ~] = baria(aMC, nMC, cStar, rhop, deltaT, dimensions, false);
+    
+    % collecting the burning time -> end of the time vector 
+    t = time(end);
+    
+    % updating storing time vector 
+    tVec = [tVec, t];
+    
+    % computing mean
+    meanVec = [meanVec, mean(tVec)];
+
+    % computing standard deviation 
+    deviationVec = [deviationVec, std(tVec)];
+
+    % computing errors 
+    if length(deviationVec) > 2
+        deviationError = abs(deviationVec(end-1) - deviationVec(end));
+        meanError      = abs(meanVec(end-1) - meanVec(end));
+        if deviationError < deviationTol && meanError < meanTol
+            error = false; 
+        endif
+    endif
+
+endwhile
+
+deviationError
+meanError
+
+% generate figure 
+figure 
+subplot(311)
+plot(tVec, 'r', 'linewidth', 3);
+ylabel('time [s]');
+xlabel('iteration');
+subplot(312)
+plot(meanVec, 'b', 'linewidth', 3);
+ylabel('\bar{t}');
+xlabel('iteration');
+subplot(313)
+plot(deviationVec, 'g', 'linewidth', 3);
+ylabel('\sigma')
+xlabel('iteration');
