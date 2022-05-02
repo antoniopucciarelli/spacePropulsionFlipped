@@ -1,4 +1,4 @@
-function [time, pVec, x, y, RbVec] = baria(a, n, cStar, rhop, deltaT, dimensions, graph)
+function [time, pVec, x, y, RbVec] = baria(a, n, cStar, rhop, deltaT, dimensions, graph, titleName)
 % This program computes the development of burning in a solid rocket motor -- BARIA type 
 % dimensions: [outDiam, innerDiam, throatDiam, lenght]
 
@@ -48,8 +48,7 @@ while x(end) > 0 && y(end) > 0
     y = [y, y(end) - RbVec(end) * deltaT];
     % computing time
     time = [time, time(end) + deltaT];
-
-endwhile
+end
 
 if graph
     figure
@@ -57,28 +56,26 @@ if graph
     plot(time, x, 'r', 'linewidth', 3);
     hold on
     plot(time, y, 'b', 'linewidth', 3);
-    h = legend('x', 'y');
-    legend(h, 'location', 'southeast');
+    legend({'x', 'y'}, 'Location', 'southeast');
     xlabel('time [s]')
     ylabel('grain dimensions [m]')
     grid on 
     grid minor 
     subplot(312)
     plot(time(2:end), pVec, 'g', 'linewidth', 3);
-    h = legend('pressure');
-    legend(h, 'location', 'southeast');
+    legend({'pressure'}, 'Location', 'southeast');
     xlabel('time [s]')
     ylabel('pressure [bar]')
     grid on 
     grid minor 
     subplot(313)
-    plot(time(2:end), RbVec/1e+3, 'm', 'linewidth', 3);
+    plot(time(2:end), RbVec*1e+3, 'm', 'linewidth', 3);
     xlabel('time [s]')
     ylabel('regression rate')
-    h = legend('r_b [mm/s]');
-    legend(h, 'location', 'southeast');
+    legend({'r_b [mm/s]'}, 'Location', 'southeast');
     grid on 
     grid minor 
-endif 
+    sgtitle(titleName)
+end
 
-endfunction 
+end 

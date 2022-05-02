@@ -2,8 +2,15 @@ function [Rb, Peff] = reactionRate (pressure, web, target, graph)
 % This code computes the reaction rate of a solid propellant given the pressure trace of a 
 % firing test. The pressure is related to the reaction rate using the Bayer Chemie method.
 % 
-% Input: pressure
-% Output: reaction rate 
+% Inputs: 
+%   - pressure -- combustion chamber pressure
+%   - web      -- solid grain web thickness
+%   - target   -- pressure target chosed following Bayer-Chemie method
+%   - graph    -- boolean value for the plotting of the results
+% Outputs: 
+%   - Rb    -- reaction rate  
+%   - Peff  -- effective pressure
+%
 
 % computing max pressure: value and position
 [Pmax, maxPos] = max(pressure(200:end-200)); 
@@ -17,38 +24,38 @@ counter = 1;
 found = false;
 
 % loop on the first half of the pressure curve
-while !found && maxPos - counter > 0
+while ~found && maxPos - counter > 0
   if pressure(maxPos - counter) > Ptarget
     counter = counter + 1;
   else
     found = true; 
     ignitionPos = maxPos - counter;
-  endif
-endwhile
+  end
+end
 
-if !found 
+if ~found 
   % print error
   error('Ignition pressure has not been found.')
-endif
+end
 
 % extintion study
 counter = 1;
 found = false; 
 
 % loop on the second half of the pressure curve
-while !found && maxPos + counter < length(pressure)
+while ~found && maxPos + counter < length(pressure)
   if pressure(maxPos + counter) > Ptarget 
     counter = counter + 1; 
   else 
     found = true;
     extintionPos = maxPos + counter; 
-  endif
-endwhile
+  end
+end
 
-if !found
+if ~found
   % print error
   error('Extintion pressure has not been found.')
-endif
+end
 
 % computing reference pressure 
 % computing burning time interval
@@ -58,7 +65,7 @@ deltaT = extintionPos - ignitionPos;
 pressureIntegral = 0.0;
 for ii = ignitionPos+1:extintionPos
   pressureIntegral = pressureIntegral + (pressure(ii) + pressure(ii-1))/2;
-endfor
+end
 
 % setting up I value used in Bayer-Chemie model
 I = pressureIntegral / 2;
@@ -72,41 +79,38 @@ counter = 1;
 found = false;
 
 % loop on the first half of the pressure curve
-while !found && maxPos - counter > 0
+while ~found && maxPos - counter > 0
   if pressure(maxPos - counter) > Pref
     counter = counter + 1;
   else
     found = true; 
     ignitionEffPos = maxPos - counter;
-  endif
-endwhile
+  end
+end
 
-if !found
+if ~found
   % print error
   error('Ignition reference pressure has not been found.')
-endif
+end
 
 % extintion study
 counter = 1;
 found = false; 
 
 % loop on the second half of the pressure curve
-while !found && maxPos + counter < length(pressure)
+while ~found && maxPos + counter < length(pressure)
   if pressure(maxPos + counter) > Pref 
     counter = counter + 1; 
   else 
     found = true;
     extintionEffPos = maxPos + counter;
-  endif
-endwhile
+  end
+end
 
-if !found
+if ~found
   % print error
   error('Extintion reference pressure has not been found.')
-endif
-
-% computing effection pressure integral 
-pressureIntegral = 0.0;
+end
 
 % computing reference time interval
 deltaT = extintionEffPos - ignitionEffPos;
@@ -115,7 +119,7 @@ deltaT = extintionEffPos - ignitionEffPos;
 pressureIntegral = 0.0;
 for ii = ignitionEffPos+1:extintionEffPos
   pressureIntegral = pressureIntegral + (pressure(ii) + pressure(ii-1))/2;
-endfor
+end
 
 % computing effective pressure 
 Peff = pressureIntegral/deltaT;
@@ -126,7 +130,7 @@ Rb = web/deltaT;
 
 % plotting data 
 if graph
-  figure(1, 'position', [0, 0, 700, 600])
+  figure
   plot(pressure, 'k', 'linewidth', 3);
   hold on 
   plot(maxPos+200, Pmax, 'go', 'linewidth', 5)
@@ -140,6 +144,6 @@ if graph
   legend (h, "location", "northeastoutside");
   xlabel('time [ms]')
   ylabel('pressure [bar]')
-endif
+end
 
-endfunction
+end
